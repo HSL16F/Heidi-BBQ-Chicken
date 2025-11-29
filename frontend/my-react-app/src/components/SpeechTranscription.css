@@ -267,6 +267,18 @@
   border: 1px solid #b3d9ff;
 }
 
+.detected-reason-badge {
+  display: block;
+  margin-left: 2.1rem; /* align under text following the number */
+  margin-top: 0.25rem;
+  padding: 0.25rem 0.5rem;
+  background-color: #fff7e6;
+  color: #cc7a00;
+  border-radius: 4px;
+  font-size: 0.85rem;
+  border: 1px solid #ffe0b3;
+}
+
 @media (max-width: 768px) {
   .speech-transcription-container {
     padding: 1rem;

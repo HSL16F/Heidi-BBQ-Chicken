@@ -47,7 +47,7 @@ export async function submitReferral(
   const missingFields: string[] = [];
   if (!trimmedData.patientFirstName) missingFields.push('Patient First Name');
   if (!trimmedData.patientLastName) missingFields.push('Patient Last Name');
-  if (!trimmedData.patientDOB) missingFields.push('Patient Date of Birth');
+  // patientDOB is optional for searching; keep it for display/record if provided
   if (!trimmedData.reason) missingFields.push('Reason');
   if (!trimmedData.referralDate) missingFields.push('Referral Date');
   if (!trimmedData.referToFirstName) missingFields.push('Refer To - First Name');

@@ -21,7 +21,7 @@ const GROUPNAME = process.env.GROUPNAME || 'Default';
 interface ReferralRequestBody {
   patientFirstName: string;
   patientLastName: string;
-  patientDOB: string;
+  patientDOB?: string; // Optional for search
   reason: string;
   referralDate: string;
   referToFirstName: string;
@@ -95,7 +95,6 @@ router.post('/', async (req: Request, res: Response) => {
     console.log('Received referral data:', {
       patientFirstName,
       patientLastName,
-      patientDOB,
       reason,
       referralDate,
       referToFirstName,
@@ -121,7 +120,6 @@ router.post('/', async (req: Request, res: Response) => {
     const missingFields: string[] = [];
     if (!trimmed.patientFirstName) missingFields.push('patientFirstName');
     if (!trimmed.patientLastName) missingFields.push('patientLastName');
-    if (!trimmed.patientDOB) missingFields.push('patientDOB');
     if (!trimmed.reason) missingFields.push('reason');
     if (!trimmed.referralDate) missingFields.push('referralDate');
     if (!trimmed.referToFirstName) missingFields.push('referToFirstName');
@@ -149,23 +147,33 @@ router.post('/', async (req: Request, res: Response) => {
     // Start transaction
     await connection.beginTransaction();
 
-    // Search for patient by name and date of birth
-    // Format DOB for database comparison (assuming YYYY-MM-DD format)
-    const dobFormatted = trimmed.patientDOB.includes('T') 
-      ? trimmed.patientDOB.split('T')[0] 
-      : trimmed.patientDOB;
-    
-    const [patientRows] = (await connection.execute(
-      `SELECT pid, fname, lname, DOB FROM patient_data 
-       WHERE LOWER(fname) = LOWER(?) AND LOWER(lname) = LOWER(?) AND DOB = ?`,
-      [trimmed.patientFirstName, trimmed.patientLastName, dobFormatted]
-    )) as any[];
+    // Search for patient by name (DOB optional)
+    let patientRows: any[] = [];
+    if (trimmed.patientDOB) {
+      // If DOB provided, use it to narrow the search
+      const dobFormatted = trimmed.patientDOB.includes('T') 
+        ? trimmed.patientDOB.split('T')[0] 
+        : trimmed.patientDOB;
+
+      [patientRows] = (await connection.execute(
+        `SELECT pid, fname, lname, DOB FROM patient_data 
+         WHERE LOWER(fname) = LOWER(?) AND LOWER(lname) = LOWER(?) AND DOB = ?`,
+        [trimmed.patientFirstName, trimmed.patientLastName, dobFormatted]
+      )) as any[];
+    } else {
+      // No DOB: search by name only
+      [patientRows] = (await connection.execute(
+        `SELECT pid, fname, lname, DOB FROM patient_data 
+         WHERE LOWER(fname) = LOWER(?) AND LOWER(lname) = LOWER(?)`,
+        [trimmed.patientFirstName, trimmed.patientLastName]
+      )) as any[];
+    }
 
     if (!patientRows || patientRows.length === 0) {
       await connection.rollback();
       connection.release();
       return res.status(400).json({
-        error: `Patient not found. No patient found with name "${trimmed.patientFirstName} ${trimmed.patientLastName}" and date of birth "${dobFormatted}".`,
+        error: `Patient not found. No patient found with name "${trimmed.patientFirstName} ${trimmed.patientLastName}"${trimmed.patientDOB ? ` and date of birth "${trimmed.patientDOB}"` : ''}.`,
       });
     }
 
@@ -173,7 +181,7 @@ router.post('/', async (req: Request, res: Response) => {
       await connection.rollback();
       connection.release();
       return res.status(400).json({
-        error: `Multiple patients found with name "${trimmed.patientFirstName} ${trimmed.patientLastName}" and date of birth "${dobFormatted}". Please use patient ID instead.`,
+        error: `Multiple patients found with name "${trimmed.patientFirstName} ${trimmed.patientLastName}"${trimmed.patientDOB ? ` and date of birth "${trimmed.patientDOB}"` : ''}. Please use a more specific identifier (e.g. patient ID or DOB).`,
       });
     }
 

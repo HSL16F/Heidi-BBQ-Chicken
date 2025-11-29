@@ -70,7 +70,7 @@ function ReferralForm() {
 
   const generatePDF = () => {
     // Validate that required fields are filled
-    if (!formData.patientFirstName || !formData.patientLastName || !formData.patientDOB ||
+    if (!formData.patientFirstName || !formData.patientLastName ||
         !formData.reason || !formData.referralDate || 
         !formData.referToFirstName || !formData.referToLastName ||
         !formData.referByFirstName || !formData.referByLastName) {
@@ -134,9 +134,11 @@ function ReferralForm() {
           month: 'long', 
           day: 'numeric' 
         })
-      : formData.patientDOB;
+      : '';
     addText(`Patient: ${formData.patientFirstName} ${formData.patientLastName}`, 12, false, 'left', 2);
-    addText(`Date of Birth: ${patientDOBFormatted}`, 12, false, 'left', 4);
+    if (patientDOBFormatted) {
+      addText(`Date of Birth: ${patientDOBFormatted}`, 12, false, 'left', 4);
+    }
 
     // Subject
     addText('Subject: Referral', 12, true, 'left', 4);
@@ -148,7 +150,9 @@ function ReferralForm() {
     addText('I am writing to refer the following patient for your assessment and management:', 12, false, 'left', 4);
 
     addText(`Patient: ${formData.patientFirstName} ${formData.patientLastName}`, 12, false, 'left', 2);
-    addText(`Date of Birth: ${patientDOBFormatted}`, 12, false, 'left', 4);
+    if (patientDOBFormatted) {
+      addText(`Date of Birth: ${patientDOBFormatted}`, 12, false, 'left', 4);
+    }
 
     addText('Reason for Referral:', 12, true, 'left', 2);
     addText(formData.reason, 12, false, 'left', 4);
@@ -204,14 +208,13 @@ function ReferralForm() {
         </div>
 
         <div className="form-group">
-          <label htmlFor="patientDOB">Patient Date of Birth *</label>
+          <label htmlFor="patientDOB">Patient Date of Birth (optional, helps disambiguate)</label>
           <input
             type="date"
             id="patientDOB"
             name="patientDOB"
             value={formData.patientDOB}
             onChange={handleChange}
-            required
           />
         </div>
 

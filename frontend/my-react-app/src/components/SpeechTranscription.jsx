@@ -369,6 +369,32 @@ function SpeechTranscription() {
     return null;
   };
 
+  // Function to extract referral reason from transcription text
+  const extractReferralReason = (text) => {
+    // Look for common patterns indicating a reason
+    const reasonPatterns = [
+      /(?:for|regarding|about)\s+(.+)$/i,          // "for chest pain", "regarding depression"
+      /because of\s+(.+)$/i,                     // "because of ongoing back pain"
+      /because\s+(.+)$/i,                        // "because they have diabetes"
+      /due to\s+(.+)$/i,                         // "due to recurrent falls"
+    ];
+
+    for (const pattern of reasonPatterns) {
+      const match = text.match(pattern);
+      if (match && match[1]) {
+        let reason = match[1].trim();
+        // Strip trailing polite phrases that aren't part of the reason
+        reason = reason.replace(/\b(thank you|thanks|please review|please assess).*$/i, '').trim();
+        // Limit length to avoid huge blobs
+        if (reason.length > 0) {
+          return reason.length > 400 ? reason.slice(0, 400) + '…' : reason;
+        }
+      }
+    }
+
+    return null;
+  };
+
   const checkForReferral = (transcriptionText, transcriptionIndex) => {
     const lowerText = transcriptionText.toLowerCase();
     
@@ -377,11 +403,12 @@ function SpeechTranscription() {
       return null;
     }
     
-    // Try to extract patient name from the transcription
+    // Try to extract patient name and reason from the transcription
     const extractedName = extractPatientName(transcriptionText);
     if (extractedName) {
       setDetectedPatientName(extractedName);
     }
+    const extractedReason = extractReferralReason(transcriptionText);
     
     // Try to find a specialist type mentioned in the text
     // Sort keywords by length (longest first) to match more specific terms first
@@ -417,26 +444,28 @@ function SpeechTranscription() {
       );
       
       if (matches.length > 0) {
-        // Store specialty info for this transcription, including detected patient name
+        // Store specialty info for this transcription, including detected patient name / reason
         setTranscriptionSpecialties(prev => ({
           ...prev,
           [transcriptionIndex]: {
             specialty: foundSpecialty,
             specialists: matches,
-            patientName: extractedName || null
+            patientName: extractedName || null,
+            reason: extractedReason || prev[transcriptionIndex]?.reason || null,
           }
         }));
         return { specialty: foundSpecialty, specialists: matches };
       }
     }
     
-    // Even if no specialty found, store the patient name if detected
-    if (extractedName) {
+    // Even if no specialty found, store the patient name / reason if detected
+    if (extractedName || extractedReason) {
       setTranscriptionSpecialties(prev => ({
         ...prev,
         [transcriptionIndex]: {
           ...prev[transcriptionIndex],
-          patientName: extractedName
+          patientName: extractedName || prev[transcriptionIndex]?.patientName || null,
+          reason: extractedReason || prev[transcriptionIndex]?.reason || null,
         }
       }));
     }
@@ -480,10 +509,14 @@ function SpeechTranscription() {
   const openReferralForm = (specialist, transcriptionIndex = null) => {
     setSelectedSpecialist(specialist);
     
-    // Get patient name from the specific transcription if available
+    // Get patient name / reason from the specific transcription if available
     let patientNameToUse = detectedPatientName;
+    let reasonToUse = referralFormData.reason;
     if (transcriptionIndex !== null && transcriptionSpecialties[transcriptionIndex]?.patientName) {
       patientNameToUse = transcriptionSpecialties[transcriptionIndex].patientName;
+    }
+    if (transcriptionIndex !== null && transcriptionSpecialties[transcriptionIndex]?.reason) {
+      reasonToUse = transcriptionSpecialties[transcriptionIndex].reason;
     }
     
     // Pre-fill refer by fields with practitioner name if available
@@ -492,6 +525,7 @@ function SpeechTranscription() {
       ...prev,
       patientFirstName: patientNameToUse?.firstName || prev.patientFirstName || '',
       patientLastName: patientNameToUse?.lastName || prev.patientLastName || '',
+      reason: reasonToUse || prev.reason || '',
       referByFirstName: practitionerName.firstName,
       referByLastName: practitionerName.lastName,
     }));
@@ -509,7 +543,7 @@ function SpeechTranscription() {
 
   const generateReferralPDF = () => {
     // Validate that required fields are filled
-    if (!referralFormData.patientFirstName || !referralFormData.patientLastName || !referralFormData.patientDOB ||
+    if (!referralFormData.patientFirstName || !referralFormData.patientLastName ||
         !referralFormData.reason || !referralFormData.referralDate ||
         !referralFormData.referByFirstName || !referralFormData.referByLastName ||
         !selectedSpecialist) {
@@ -581,9 +615,11 @@ function SpeechTranscription() {
           month: 'long', 
           day: 'numeric' 
         })
-      : referralFormData.patientDOB;
+      : '';
     addText(`Patient: ${referralFormData.patientFirstName} ${referralFormData.patientLastName}`, 12, false, 'left', 2);
-    addText(`Date of Birth: ${patientDOBFormatted}`, 12, false, 'left', 4);
+    if (patientDOBFormatted) {
+      addText(`Date of Birth: ${patientDOBFormatted}`, 12, false, 'left', 4);
+    }
 
     // Subject
     addText('Subject: Referral', 12, true, 'left', 4);
@@ -595,7 +631,9 @@ function SpeechTranscription() {
     addText('I am writing to refer the following patient for your assessment and management:', 12, false, 'left', 4);
 
     addText(`Patient: ${referralFormData.patientFirstName} ${referralFormData.patientLastName}`, 12, false, 'left', 2);
-    addText(`Date of Birth: ${patientDOBFormatted}`, 12, false, 'left', 4);
+    if (patientDOBFormatted) {
+      addText(`Date of Birth: ${patientDOBFormatted}`, 12, false, 'left', 4);
+    }
 
     addText('Reason for Referral:', 12, true, 'left', 2);
     addText(referralFormData.reason, 12, false, 'left', 4);
@@ -763,6 +801,11 @@ function SpeechTranscription() {
                         Patient: {transcriptionSpecialties[index].patientName.firstName} {transcriptionSpecialties[index].patientName.lastName}
                       </span>
                     )}
+                    {transcriptionSpecialties[index]?.reason && (
+                      <span className="detected-reason-badge">
+                        Reason: {transcriptionSpecialties[index].reason}
+                      </span>
+                    )}
                   </div>
                   {hasSpecialist && (
                     <button 
@@ -849,18 +892,6 @@ function SpeechTranscription() {
                       onChange={handleReferralFormChange}
                       required
                       placeholder="Enter patient last name"
-                    />
-                  </div>
-
-                  <div className="form-group">
-                    <label htmlFor="patientDOB">Patient Date of Birth *</label>
-                    <input
-                      type="date"
-                      id="patientDOB"
-                      name="patientDOB"
-                      value={referralFormData.patientDOB}
-                      onChange={handleReferralFormChange}
-                      required
                     />
                   </div>
 
