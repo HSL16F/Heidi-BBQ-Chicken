@@ -1,0 +1,50 @@
+[
+    {
+        "consultation_id": 1,
+        "title": "General Check-Up",
+        "doctor": "Good afternoon, Mrs. Thompson. How have you been feeling lately?",
+        "patient": "I've been okay, doctor. Just a bit of back pain that won’t go away. It’s been bothering me for a few weeks now.",
+        "doctor_response": "I see. Given the duration of your symptoms, I’d recommend a physical therapy assessment to help with your posture and strengthen the muscles around your spine. I’ll refer you to a specialist in musculoskeletal therapy. I’ll send the referral over today.",
+        "patient_response": "Thank you, doctor. That sounds like a good plan."
+    },
+    {
+        "consultation_id": 2,
+        "title": "Hypertension Concern",
+        "doctor": "Mr. Harris, your recent blood pressure readings have been higher than usual. How have you been managing your diet and exercise?",
+        "patient": "I haven’t been exercising as much as I should, and my diet’s been a bit on the heavier side recently.",
+        "doctor_response": "In that case, I’d like to refer you to a cardiologist for further evaluation. It’s important to manage hypertension early to prevent any complications. I’ll get the referral over to the cardiology department, and they’ll contact you for an appointment.",
+        "patient_response": "Okay, I understand. I’ll follow through with that. Thanks, doctor."
+    },
+    {
+        "consultation_id": 3,
+        "title": "Skin Issue",
+        "doctor": "Mr. Stevens, you mentioned that the rash on your arm has been spreading. Can you tell me if it’s itchy or painful?",
+        "patient": "Yes, it’s been itching quite a bit, and the redness has gotten worse over the past few days.",
+        "doctor_response": "It seems like it could be eczema or possibly an allergic reaction. I’m going to refer you to a dermatologist to get a proper diagnosis and treatment plan. I’ll send the referral to their office, and they should reach out to you soon.",
+        "patient_response": "Alright, I’ll wait for their call. Thank you, doctor."
+    },
+    {
+        "consultation_id": 4,
+        "title": "Digestive Concerns",
+        "doctor": "Ms. Carter, I see you've been experiencing frequent stomach discomfort and bloating. Have you noticed any specific foods that trigger these symptoms?",
+        "patient": "Yes, I've noticed it’s worse after eating dairy, especially milk and cheese.",
+        "doctor_response": "This could be a sign of lactose intolerance, but I recommend we get a more comprehensive evaluation. I’ll refer you to a gastroenterologist for further testing. They may perform some tests to check for any underlying conditions.",
+        "patient_response": "Thanks, doctor. I’ll follow up with the specialist."
+    },
+    {
+        "consultation_id": 5,
+        "title": "Sleep Problems",
+        "doctor": "Mr. Lee, I see that you've been having trouble sleeping for several months now. How often are you waking up during the night?",
+        "patient": "It’s almost every night. I wake up multiple times, and it takes me a long time to fall back asleep.",
+        "doctor_response": "This could be related to stress, or it might be a sleep disorder like insomnia. I’d like to refer you to a sleep specialist who can evaluate your sleep patterns and possibly conduct a sleep study if needed.",
+        "patient_response": "That sounds helpful. Thank you, doctor."
+    },
+    {
+        "consultation_id": 6,
+        "title": "Joint Pain",
+        "doctor": "Ms. Robinson, you mentioned joint pain in your knees and hips. Has it been affecting your ability to move around or do daily activities?",
+        "patient": "Yes, it’s especially bad in the mornings, and I’ve been having trouble climbing stairs.",
+        "doctor_response": "It could be a sign of osteoarthritis, but we’ll need a more detailed evaluation. I’m referring you to a rheumatologist, who specializes in joint and autoimmune conditions. They’ll be able to assess your symptoms more thoroughly.",
+        "patient_response": "Thank you, doctor. I’ll make an appointment with them."
+    }
+]

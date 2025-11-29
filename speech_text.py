@@ -51,6 +51,7 @@ def save_to_file():
     print(f"Total lines transcribed: {len(transcriptions)}")
 
 def main():
+    
     print("=== Speech Transcription ===")
     print(f"Transcriptions will be saved to: {OUTPUT_FILE}")
     print("Press Enter at any time to stop and save.\n")
