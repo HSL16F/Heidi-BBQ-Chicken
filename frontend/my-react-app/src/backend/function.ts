@@ -2,7 +2,9 @@
 // This function makes HTTP requests to a backend API endpoint
 
 export interface ReferralFormData {
-  pid: string;
+  patientFirstName: string;
+  patientLastName: string;
+  patientDOB: string;
   reason: string;
   referralDate: string;
   referToFirstName: string;
@@ -28,29 +30,49 @@ export async function submitReferral(
   data: ReferralFormData,
   apiUrl: string = '/api/referral'
 ): Promise<ReferralResponse> {
-  // Validate required fields
-  if (
-    !data.pid ||
-    !data.reason ||
-    !data.referralDate ||
-    !data.referToFirstName ||
-    !data.referToLastName ||
-    !data.referByFirstName ||
-    !data.referByLastName
-  ) {
+  // Validate required fields (trim whitespace)
+  const trimmedData = {
+    patientFirstName: data.patientFirstName?.trim() || '',
+    patientLastName: data.patientLastName?.trim() || '',
+    patientDOB: data.patientDOB?.trim() || '',
+    reason: data.reason?.trim() || '',
+    referralDate: data.referralDate?.trim() || '',
+    referToFirstName: data.referToFirstName?.trim() || '',
+    referToLastName: data.referToLastName?.trim() || '',
+    referByFirstName: data.referByFirstName?.trim() || '',
+    referByLastName: data.referByLastName?.trim() || '',
+  };
+
+  // Check which fields are missing
+  const missingFields: string[] = [];
+  if (!trimmedData.patientFirstName) missingFields.push('Patient First Name');
+  if (!trimmedData.patientLastName) missingFields.push('Patient Last Name');
+  if (!trimmedData.patientDOB) missingFields.push('Patient Date of Birth');
+  if (!trimmedData.reason) missingFields.push('Reason');
+  if (!trimmedData.referralDate) missingFields.push('Referral Date');
+  if (!trimmedData.referToFirstName) missingFields.push('Refer To - First Name');
+  if (!trimmedData.referToLastName) missingFields.push('Refer To - Last Name');
+  if (!trimmedData.referByFirstName) missingFields.push('Refer By - First Name');
+  if (!trimmedData.referByLastName) missingFields.push('Refer By - Last Name');
+
+  if (missingFields.length > 0) {
     return {
       success: false,
-      error: 'All fields are required',
+      error: `Missing required fields: ${missingFields.join(', ')}`,
     };
   }
 
   try {
+    // Debug: log the data being sent
+    console.log('Submitting referral with data:', trimmedData);
+    
+    // Use trimmed data for the request
     const response = await fetch(apiUrl, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify(data),
+      body: JSON.stringify(trimmedData),
     });
 
     const result = await response.json();

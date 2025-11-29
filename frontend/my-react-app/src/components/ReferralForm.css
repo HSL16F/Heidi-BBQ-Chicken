@@ -59,9 +59,16 @@
   min-height: 100px;
 }
 
-.submit-button {
+.button-group {
+  display: flex;
+  gap: 1rem;
+  margin-top: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.submit-button,
+.pdf-button {
   padding: 0.75rem 2rem;
-  background-color: #646cff;
   color: white;
   border: none;
   border-radius: 4px;
@@ -69,7 +76,12 @@
   font-weight: 500;
   cursor: pointer;
   transition: background-color 0.2s;
-  margin-top: 0.5rem;
+  flex: 1;
+  min-width: 150px;
+}
+
+.submit-button {
+  background-color: #646cff;
 }
 
 .submit-button:hover:not(:disabled) {
@@ -77,6 +89,19 @@
 }
 
 .submit-button:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+}
+
+.pdf-button {
+  background-color: #28a745;
+}
+
+.pdf-button:hover:not(:disabled) {
+  background-color: #218838;
+}
+
+.pdf-button:disabled {
   background-color: #ccc;
   cursor: not-allowed;
 }
@@ -106,6 +131,15 @@
 
   .referral-form-container {
     padding: 1rem;
+  }
+
+  .button-group {
+    flex-direction: column;
+  }
+
+  .submit-button,
+  .pdf-button {
+    width: 100%;
   }
 }
 

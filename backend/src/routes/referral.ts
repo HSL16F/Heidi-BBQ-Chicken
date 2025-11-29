@@ -19,7 +19,9 @@ const CURRENT_USER_ID = parseInt(process.env.CURRENT_USER_ID || '1');
 const GROUPNAME = process.env.GROUPNAME || 'Default';
 
 interface ReferralRequestBody {
-  pid: string;
+  patientFirstName: string;
+  patientLastName: string;
+  patientDOB: string;
   reason: string;
   referralDate: string;
   referToFirstName: string;
@@ -78,7 +80,9 @@ router.post('/', async (req: Request, res: Response) => {
   try {
     // Parse request body
     const {
-      pid,
+      patientFirstName,
+      patientLastName,
+      patientDOB,
       reason,
       referralDate,
       referToFirstName,
@@ -87,17 +91,49 @@ router.post('/', async (req: Request, res: Response) => {
       referByLastName,
     }: ReferralRequestBody = req.body;
 
-    // Validate required fields
-    if (
-      !pid ||
-      !reason ||
-      !referralDate ||
-      !referToFirstName ||
-      !referToLastName ||
-      !referByFirstName ||
-      !referByLastName
-    ) {
-      return res.status(400).json({ error: 'All fields are required' });
+    // Debug: log received data
+    console.log('Received referral data:', {
+      patientFirstName,
+      patientLastName,
+      patientDOB,
+      reason,
+      referralDate,
+      referToFirstName,
+      referToLastName,
+      referByFirstName,
+      referByLastName,
+    });
+
+    // Trim and validate required fields
+    const trimmed = {
+      patientFirstName: patientFirstName?.trim() || '',
+      patientLastName: patientLastName?.trim() || '',
+      patientDOB: patientDOB?.trim() || '',
+      reason: reason?.trim() || '',
+      referralDate: referralDate?.trim() || '',
+      referToFirstName: referToFirstName?.trim() || '',
+      referToLastName: referToLastName?.trim() || '',
+      referByFirstName: referByFirstName?.trim() || '',
+      referByLastName: referByLastName?.trim() || '',
+    };
+
+    // Check which fields are missing
+    const missingFields: string[] = [];
+    if (!trimmed.patientFirstName) missingFields.push('patientFirstName');
+    if (!trimmed.patientLastName) missingFields.push('patientLastName');
+    if (!trimmed.patientDOB) missingFields.push('patientDOB');
+    if (!trimmed.reason) missingFields.push('reason');
+    if (!trimmed.referralDate) missingFields.push('referralDate');
+    if (!trimmed.referToFirstName) missingFields.push('referToFirstName');
+    if (!trimmed.referToLastName) missingFields.push('referToLastName');
+    if (!trimmed.referByFirstName) missingFields.push('referByFirstName');
+    if (!trimmed.referByLastName) missingFields.push('referByLastName');
+
+    if (missingFields.length > 0) {
+      console.log('Missing fields:', missingFields);
+      return res.status(400).json({ 
+        error: `Missing required fields: ${missingFields.join(', ')}` 
+      });
     }
 
     // Create database connection pool
@@ -113,33 +149,50 @@ router.post('/', async (req: Request, res: Response) => {
     // Start transaction
     await connection.beginTransaction();
 
-    // Check if patient ID exists
+    // Search for patient by name and date of birth
+    // Format DOB for database comparison (assuming YYYY-MM-DD format)
+    const dobFormatted = trimmed.patientDOB.includes('T') 
+      ? trimmed.patientDOB.split('T')[0] 
+      : trimmed.patientDOB;
+    
     const [patientRows] = (await connection.execute(
-      'SELECT pid FROM patient_data WHERE pid = ?',
-      [pid]
+      `SELECT pid, fname, lname, DOB FROM patient_data 
+       WHERE LOWER(fname) = LOWER(?) AND LOWER(lname) = LOWER(?) AND DOB = ?`,
+      [trimmed.patientFirstName, trimmed.patientLastName, dobFormatted]
     )) as any[];
 
     if (!patientRows || patientRows.length === 0) {
       await connection.rollback();
       connection.release();
       return res.status(400).json({
-        error: `Patient ID ${pid} does not exist. Cannot insert referral.`,
+        error: `Patient not found. No patient found with name "${trimmed.patientFirstName} ${trimmed.patientLastName}" and date of birth "${dobFormatted}".`,
       });
     }
+
+    if (patientRows.length > 1) {
+      await connection.rollback();
+      connection.release();
+      return res.status(400).json({
+        error: `Multiple patients found with name "${trimmed.patientFirstName} ${trimmed.patientLastName}" and date of birth "${dobFormatted}". Please use patient ID instead.`,
+      });
+    }
+
+    // Get the patient ID from the search result
+    const pid = patientRows[0].pid;
 
     // Add or get refer_to ID (external provider)
     const referToId = await addProvider(
       connection,
-      referToFirstName,
-      referToLastName,
+      trimmed.referToFirstName,
+      trimmed.referToLastName,
       0
     );
 
     // Add or get refer_by ID (internal provider)
     const referById = await addProvider(
       connection,
-      referByFirstName,
-      referByLastName,
+      trimmed.referByFirstName,
+      trimmed.referByLastName,
       1
     );
 
@@ -212,19 +265,19 @@ router.post('/', async (req: Request, res: Response) => {
 
     await connection.execute(
       `INSERT INTO lbt_data (form_id, field_id, field_value) VALUES (?, ?, ?)`,
-      [transId, fieldIds['refer_date'], referralDate]
+      [transId, fieldIds['refer_date'], trimmed.referralDate]
     );
 
     await connection.execute(
       `INSERT INTO lbt_data (form_id, field_id, field_value) VALUES (?, ?, ?)`,
-      [transId, fieldIds['diagnosis'], reason]
+      [transId, fieldIds['diagnosis'], trimmed.reason]
     );
 
     // Reason (body field) - if it exists
     if (fieldIds['body']) {
       await connection.execute(
         `INSERT INTO lbt_data (form_id, field_id, field_value) VALUES (?, ?, ?)`,
-        [transId, fieldIds['body'], reason]
+        [transId, fieldIds['body'], trimmed.reason]
       );
     }
 
