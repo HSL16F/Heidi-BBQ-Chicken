@@ -1,0 +1,56 @@
+# Use admin/pass as user/password credentials to login to openemr (from OE_USER and OE_PASS below)
+# MYSQL_HOST and MYSQL_ROOT_PASS are required for openemr
+# MYSQL_USER, MYSQL_PASS, OE_USER, MYSQL_PASS are optional for openemr and
+#   if not provided, then default to openemr, openemr, admin, and pass respectively.
+version: '3.1'
+services:
+  mysql:
+    restart: always
+    image: mariadb:11.4
+    command: ['mariadbd','--character-set-server=utf8mb4']
+    volumes:
+    - databasevolume:/var/lib/mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+    ports:
+    - 3306:3306
+  openemr:
+    restart: always
+    image: openemr/openemr:7.0.3
+    ports:
+    - 80:80
+    - 443:443
+    volumes:
+    - logvolume01:/var/log
+    - sitevolume:/var/www/localhost/htdocs/openemr/sites
+    environment:
+      MYSQL_HOST: mysql
+      MYSQL_ROOT_PASS: root
+      MYSQL_USER: openemr
+      MYSQL_PASS: openemr
+      OE_USER: admin
+      OE_PASS: pass
+    depends_on:
+    - mysql
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    ports:
+    - "3001:3001"
+    environment:
+      - DB_HOST=mysql
+      - DB_PORT=3306
+      - DB_USER=openemr
+      - DB_PASSWORD=openemr
+      - DB_NAME=openemr
+      - PORT=3001
+      - CURRENT_USER_ID=1
+      - GROUPNAME=Default
+    depends_on:
+    - mysql
+    restart: always
+volumes:
+  logvolume01: {}
+  sitevolume: {}
+  databasevolume: {}

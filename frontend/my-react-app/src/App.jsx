@@ -1,7 +1,10 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import React, { useState } from 'react';
+import { Routes, Route } from 'react-router-dom';
+import Home from './components/Home';
+import ReferralForm from './components/ReferralForm';
+import './App.css';
+import viteLogo from './assets/vite.svg';
+import reactLogo from './assets/react.svg';
 
 // Tooltip component
 function KeywordTooltip({ word, children }) {
@@ -92,7 +95,7 @@ function HighlightedText({ text }) {
 function App() {
   const [count, setCount] = useState(0);
 
-  const transcriptText = `58M with a history of MI 2ya presents with a 1/52 hx of increased awareness of heart beat following a sporting injury to the ribs. Sx remained stable but become more noticeable during periods of anxiety about recurrence of cardiac events. He reports 2 episodes of waking at night due to feeling stressed, but denies chest pain, dyspnoea, peripheral oedema, neurological symptoms, or other systemic features. Given  cardiac hx and persistent palpitations, refer to cardiologist.`;
+  const transcriptText = `58M with a history of MI 2ya presents with a 1/52 hx of increased awareness of heart beat following a sporting injury to the ribs. Sx remained stable but become more noticeable during periods of anxiety about recurrence of cardiac events. He reports 2 episodes of waking at night due to feeling stressed, but denies chest pain, dyspnoea, peripheral oedema, neurological symptoms, or other systemic features. Given cardiac hx and persistent palpitations, refer to cardiologist.`;
 
   return (
     <>
@@ -104,7 +107,9 @@ function App() {
           <img src={reactLogo} className="logo react" alt="React logo" />
         </a>
       </div>
+
       <h1>58M, palpitations</h1>
+
       <div className="card">
         <button onClick={() => setCount((count) => count + 1)}>
           Next pt {count}
@@ -113,11 +118,16 @@ function App() {
           <HighlightedText text={transcriptText} />
         </p>
       </div>
-      <p className="read-the-docs">
-        hellow world
-      </p>
+
+      <p className="read-the-docs">hellow world</p>
+
+      {/* Routes for navigation */}
+      <Routes>
+        <Route path="/" element={<Home />} />
+        <Route path="/referral" element={<ReferralForm />} />
+      </Routes>
     </>
   );
 }
 
-export default App
+export default App;
