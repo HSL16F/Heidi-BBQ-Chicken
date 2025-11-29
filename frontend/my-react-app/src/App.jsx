@@ -3,8 +3,96 @@ import reactLogo from './assets/react.svg'
 import viteLogo from '/vite.svg'
 import './App.css'
 
+// Tooltip component
+function KeywordTooltip({ word, children }) {
+  const [showTooltip, setShowTooltip] = useState(false);
+
+  return (
+    <span style={{ position: 'relative', display: 'inline' }}>
+      <span
+        style={{
+          textDecoration: 'underline',
+          cursor: 'pointer',
+          textDecorationColor: '#755760'
+        }}
+        onMouseEnter={() => setShowTooltip(true)}
+        onMouseLeave={() => setShowTooltip(false)}
+      >
+        {children}
+      </span>
+      {showTooltip && (
+        <span
+          style={{
+            position: 'absolute',
+            bottom: '100%',
+            left: '50%',
+            transform: 'translateX(-50%)',
+            backgroundColor: '#1a1a1a',
+            color: 'white',
+            padding: '8px 12px',
+            borderRadius: '6px',
+            whiteSpace: 'nowrap',
+            fontSize: '14px',
+            marginBottom: '5px',
+            zIndex: 1000,
+            boxShadow: '0 2px 8px rgba(0,0,0,0.3)'
+          }}
+        >
+          testing testing testing 
+          <span
+            style={{
+              position: 'absolute',
+              top: '100%',
+              left: '50%',
+              transform: 'translateX(-50%)',
+              width: 0,
+              height: 0,
+              borderLeft: '6px solid transparent',
+              borderRight: '6px solid transparent',
+              borderTop: '6px solid #1a1a1a'
+            }}
+          />
+        </span>
+      )}
+    </span>
+  );
+}
+
+// Component to highlight keywords in text
+function HighlightedText({ text }) {
+  const keywords = ['cardiologist', 'dermatologist', 'endocrinologist', 'ENT surgeon', 'gastroenterologist', 'general surgeon', 'haematologist', 'neurologist', 'nephrologist', 'oncologist', 'ophthalmologist', 'orthopaedic surgeon', 'paediatrician', 'physiotherapist', 'psychiatrist', 'radiologist', 'respiratory physician', 'rheumatologist', 'urologist', 'vascular surgeon'];
+  
+  // Create a regex pattern to match all keywords (case-insensitive)
+  const pattern = new RegExp(`\\b(${keywords.join('|')})\\b`, 'gi');
+  
+  // Split text by keywords while keeping the keywords
+  const parts = text.split(pattern);
+  
+  return (
+  <>
+    {parts.map((part, index) => {
+      const isKeyword = keywords.some(
+        keyword => keyword.toLowerCase() === part.toLowerCase()
+      );
+
+      if (isKeyword) {
+        return (
+          <KeywordTooltip key={index} word={part}>
+            <span className="keyword">{part}</span>
+          </KeywordTooltip>
+        );
+      }
+
+      return <span key={index}>{part}</span>;
+    })}
+  </>
+);
+}
+
 function App() {
-  const [count, setCount] = useState(0)
+  const [count, setCount] = useState(0);
+
+  const transcriptText = `58M with a history of MI 2ya presents with a 1/52 hx of increased awareness of heart beat following a sporting injury to the ribs. Sx remained stable but become more noticeable during periods of anxiety about recurrence of cardiac events. He reports 2 episodes of waking at night due to feeling stressed, but denies chest pain, dyspnoea, peripheral oedema, neurological symptoms, or other systemic features. Given  cardiac hx and persistent palpitations, refer to cardiologist.`;
 
   return (
     <>
@@ -16,20 +104,20 @@ function App() {
           <img src={reactLogo} className="logo react" alt="React logo" />
         </a>
       </div>
-      <h1>hellow world</h1>
+      <h1>58M, palpitations</h1>
       <div className="card">
         <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
+          Next pt {count}
         </button>
         <p>
-          Edit <code>src/App.jsx</code> and save to test HMR
+          <HighlightedText text={transcriptText} />
         </p>
       </div>
       <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
+        hellow world
       </p>
     </>
-  )
+  );
 }
 
 export default App
