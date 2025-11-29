@@ -1,11 +1,9 @@
 import speech_recognition as sr
 import threading
 
-# Configurations
 USE_NOISE_ADJUSTMENT = True
 OUTPUT_FILE = "transcription.txt"
 
-# Initialize recognizer
 recognizer = sr.Recognizer()
 transcriptions = []
 stop_flag = threading.Event()
@@ -64,11 +62,8 @@ def main():
     input()
     print("Stopping transcription...")
     stop_flag.set()
-    
-    # Wait for thread to finish
     transcription_thread.join(timeout=5)
     
-    # Save the file
     save_to_file()
     print("Program ended.")
 
