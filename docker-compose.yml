@@ -37,7 +37,7 @@ services:
       context: ./backend
       dockerfile: Dockerfile
     ports:
-    - "3001:3001"
+      - "3001:3001"
     environment:
       - DB_HOST=mysql
       - DB_PORT=3306
@@ -48,7 +48,14 @@ services:
       - CURRENT_USER_ID=1
       - GROUPNAME=Default
     depends_on:
-    - mysql
+      - mysql
+    restart: always
+  speech-api:
+    build:
+      context: ./speech_api
+      dockerfile: Dockerfile
+    ports:
+      - "5001:5000"
     restart: always
 volumes:
   logvolume01: {}

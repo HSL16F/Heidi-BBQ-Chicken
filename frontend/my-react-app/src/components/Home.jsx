@@ -32,6 +32,9 @@ function Home() {
       <p>
         <Link to="/referral">Go to Referral Form</Link>
       </p>
+      <p>
+        <Link to="/speech">Go to Speech Transcription</Link>
+      </p>
     </>
   )
 }
